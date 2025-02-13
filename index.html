@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シーレンス時計 & カレンダー</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: white; }
+        h1 { margin-top: 20px; }
+        #clock { font-size: 2em; margin: 10px 0; }
+        #calendar { margin-top: 20px; }
+        table { border-collapse: collapse; margin: auto; }
+        td, th { border: 1px solid white; padding: 8px; }
+        th { background-color: #444; }
+    </style>
+</head>
+<body>
+
+    <h1>M</h1>
+    <div id="clock">読み込み中...</div>
+    <div id="calendar"></div>
+
+    <script>
+        // 🌏 地球基準の初期時刻（2025/2/13 14:10:21 UTC）
+        const baseEarthTime = new Date("2025-02-13T14:10:21Z").getTime(); 
+
+        // ⏳ シーレンス初期時間（2082/6/17 14:18:4）
+        const baseSilense = {
+            year: 2082, month: 6, day: 17,
+            hour: 14, minute: 18, second: 4
+        };
+
+        // 🕰️ シーレンス時間進行（1日 = 29時間）
+        const EARTH_TO_SILENSE_TIME_RATIO = 24 / 29; // シーレンスの1秒 = 地球の約0.827秒
+        const SILENSE_SECOND_IN_MS = 1000 * EARTH_TO_SILENSE_TIME_RATIO; // 0.827秒
+
+        function calculateSilenseTime() {
+            const now = new Date().getTime();
+            const elapsedEarthSeconds = (now - baseEarthTime) / 1000; // 🌏 経過秒数（地球時間）
+            const elapsedSilenseSeconds = elapsedEarthSeconds * EARTH_TO_SILENSE_TIME_RATIO; // ⏳ シーレンス時間に変換
+
+            // 🔢 シーレンス時間を計算
+            let totalSeconds = baseSilense.second + Math.floor(elapsedSilenseSeconds);
+            let totalMinutes = baseSilense.minute + Math.floor(totalSeconds / 60);
+            let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
+            let totalDays = baseSilense.day + Math.floor(totalHours / 29);
+            let totalMonths = baseSilense.month + Math.floor(totalDays / 32);
+            let totalYears = baseSilense.year + Math.floor(totalMonths / 8);
+
+            let currentSecond = totalSeconds % 60;
+            let currentMinute = totalMinutes % 60;
+            let currentHour = totalHours % 29;
+            let currentDay = (totalDays % 32) || 32;
+            let currentMonth = (totalMonths % 8) || 8;
+            let currentYear = totalYears;
+
+            // 📌 マイナス表記防止（オーバーフロー補正）
+            if (currentSecond < 0) currentSecond += 60;
+            if (currentMinute < 0) currentMinute += 60;
+            if (currentHour < 0) currentHour += 29;
+            if (currentDay < 1) currentDay = 32;
+            if (currentMonth < 1) currentMonth = 8;
+
+            // ⌚ フォーマット
+            function pad(num) { return num.toString().padStart(2, "0"); }
+            return {
+                timeString: `${currentYear}/${pad(currentMonth)}/${pad(currentDay)} ${pad(currentHour)}:${pad(currentMinute)}:${pad(currentSecond)}`,
+                year: currentYear, month: currentMonth, day: currentDay
+            };
+        }
+
+        function updateClock() {
+            const silenseTime = calculateSilenseTime();
+            document.getElementById("clock").textContent = silenseTime.timeString;
+            updateCalendar(silenseTime.year, silenseTime.month);
+        }
+
+        // 📅 カレンダー表示
+        function updateCalendar(year, month) {
+            const daysInMonth = 32;
+            const weeksInMonth = Math.ceil(daysInMonth / 8);
+            const weekNames = ["水", "金", "地", "火", "木", "土", "天", "海"]; // シーレンス曜日
+
+            let html = `<h2>${year}年 ${month}月</h2>`;
+            html += `<table><tr>`;
+            for (let i = 0; i < 8; i++) {
+                html += `<th>${weekNames[i]}</th>`;
+            }
+            html += `</tr>`;
+
+            let day = 1;
+            for (let week = 0; week < weeksInMonth; week++) {
+                html += "<tr>";
+                for (let i = 0; i < 8; i++) {
+                    if (day <= daysInMonth) {
+                        html += `<td>${day}</td>`;
+                        day++;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += "</tr>";
+            }
+            html += "</table>";
+
+            document.getElementById("calendar").innerHTML = html;
+        }
+
+        // 🕰️ シーレンスの1秒ごとに更新（0.827秒）
+        setInterval(updateClock, SILENSE_SECOND_IN_MS);
+        updateClock(); // 初回実行
+
+    </script>
+
+</body>
+</html>
