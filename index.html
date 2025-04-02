@@ -49,7 +49,7 @@
 
             let currentSecond = totalSeconds % 60;
             let currentMinute = totalMinutes % 60;
-            let currentHour = totalHours % 29;
+            let currentHour = totalHours % 24;
             let currentDay = (totalDays % 32) || 32;
             let currentMonth = (totalMonths % 8) || 8;
             let currentYear = totalYears;
@@ -57,7 +57,7 @@
             // 📌 マイナス表記防止（オーバーフロー補正）
             if (currentSecond < 0) currentSecond += 60;
             if (currentMinute < 0) currentMinute += 60;
-            if (currentHour < 0) currentHour += 29;
+            if (currentHour < 0) currentHour += 24;
             if (currentDay < 1) currentDay = 32;
             if (currentMonth < 1) currentMonth = 8;
 
