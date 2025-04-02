@@ -43,7 +43,7 @@
             let totalSeconds = baseSilense.second + Math.floor(elapsedSilenseSeconds);
             let totalMinutes = baseSilense.minute + Math.floor(totalSeconds / 60);
             let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
-            let totalDays = baseSilense.day + Math.floor(totalHours / 29);
+            let totalDays = baseSilense.day + Math.floor(totalHours / 24);
             let totalMonths = baseSilense.month + Math.floor(totalDays / 32);
             let totalYears = baseSilense.year + Math.floor(totalMonths / 8);
 
