@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シーレンス時計 & カレンダー</title>
+    <title>æpーbeﾄᖇƟƸ時計 & カレンダー</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: white; }
         h1 { margin-top: 20px; }
@@ -44,22 +44,28 @@
             let totalMinutes = baseSilense.minute + Math.floor(totalSeconds / 60);
             let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
             let totalDays = baseSilense.day + Math.floor(totalHours / 24);
-            let totalMonths = baseSilense.month + Math.floor(totalDays / 32);
-            let totalYears = baseSilense.year + Math.floor(totalMonths / 7);
 
+            // 月と年の進行を修正
+            let addedMonths = Math.floor((totalDays - 1) / 32); // 32日で1ヶ月進む
+            let currentDay = ((totalDays - 1) % 32) + 1;
+
+            let totalMonths = baseSilense.month + addedMonths;
+            let addedYears = Math.floor((totalMonths - 1) / 8); // 8ヶ月で1年進む
+            let currentMonth = ((totalMonths - 1) % 8) + 1;
+
+            let currentYear = baseSilense.year + addedYears;
+
+            // 時間も剰余で修正
             let currentSecond = totalSeconds % 60;
             let currentMinute = totalMinutes % 60;
             let currentHour = totalHours % 24;
-            let currentDay = (totalDays % 32) || 32;
-            let currentMonth = (totalMonths % 7) || 7;
-            let currentYear = totalYears;
 
             // 📌 マイナス表記防止（オーバーフロー補正）
             if (currentSecond < 0) currentSecond += 60;
             if (currentMinute < 0) currentMinute += 60;
             if (currentHour < 0) currentHour += 24;
             if (currentDay < 1) currentDay = 32;
-            if (currentMonth < 1) currentMonth = 7;
+            if (currentMonth < 1) currentMonth = 8;
 
             // ⌚ フォーマット
             function pad(num) { return num.toString().padStart(2, "0"); }
