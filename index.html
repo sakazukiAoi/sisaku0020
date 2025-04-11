@@ -16,7 +16,7 @@
 </head>
 <body>
 
-    <h1>2025.4.1.24.59.59</h1>
+    <h1>2025.4.11.24.59.59</h1>
     <div id="clock">読み込み中...</div>
     <div id="calendar"></div>
 
@@ -45,13 +45,13 @@
             let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
             let totalDays = baseSilense.day + Math.floor(totalHours / 24);
             let totalMonths = baseSilense.month + Math.floor(totalDays / 32);
-            let totalYears = baseSilense.year + Math.floor(totalMonths / 8);
+            let totalYears = baseSilense.year + Math.floor(totalMonths / 7);
 
             let currentSecond = totalSeconds % 60;
             let currentMinute = totalMinutes % 60;
             let currentHour = totalHours % 24;
             let currentDay = (totalDays % 32) || 32;
-            let currentMonth = (totalMonths % 8) || 8;
+            let currentMonth = (totalMonths % 7) || 7;
             let currentYear = totalYears;
 
             // 📌 マイナス表記防止（オーバーフロー補正）
@@ -59,7 +59,7 @@
             if (currentMinute < 0) currentMinute += 60;
             if (currentHour < 0) currentHour += 24;
             if (currentDay < 1) currentDay = 32;
-            if (currentMonth < 1) currentMonth = 8;
+            if (currentMonth < 1) currentMonth = 7;
 
             // ⌚ フォーマット
             function pad(num) { return num.toString().padStart(2, "0"); }
