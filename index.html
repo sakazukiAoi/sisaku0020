@@ -248,7 +248,7 @@
 
         children.forEach(div => {
             div.classList.remove("highlight-event");
-            if (div.textContent.startsWith(`○${month}月${String(day).padStart(2,"0")}日`)) {
+            if (div.textContent.startsWith(`${month}月${String(day).padStart(2,"0")}日`)) {
                 div.classList.add("highlight-event");
             }
         });
