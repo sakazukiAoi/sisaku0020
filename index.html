@@ -37,30 +37,47 @@
         table { border-collapse: collapse; margin: auto; }
         td, th { border: 1px solid white; padding: 8px; text-align: center; }
         th { background-color: #444; }
-        .highlight {
-            background-color: white;
-            color: black;
-            font-weight: bold;
-        }
         .schedule {
             text-align: left;
             font-size: 0.8em;
             line-height: 2em;
         }
-        .active-day {
+        .schedule div { margin: 1px 0; }
+        .highlight-event {
+            padding: 6px 10px;
+            border: 2px solid white;
+            border-radius: 6px;
+            background-color: #333;
             font-weight: bold;
         }
-.schedule div {
-    margin: 1px 0;  /* 各行の間隔を小さめに */
-}
-.highlight-event {
-    padding: 6px 10px;
-    border: 2px solid white;
-    border-radius: 6px;
-    background-color: #333;
-    font-weight: bold;
-}
 
+        /* ===== カレンダー色分け ===== */
+        .weekday { background-color: #222; }      /* 平日 */
+        .today-weekday { background-color: white; color: black; font-weight: bold; }
+
+        .ten { background-color: #4686da; }       /* 天日 */
+        .today-ten { background-color: #bad4fc; color: black; font-weight: bold; }
+
+        .umi { background-color: #b15050; }       /* 海日 */
+        .today-umi { background-color: #fac6c6; color: black; font-weight: bold; }
+
+        .holiday { background-color: #4b9655; }   /* 祝日 */
+        .today-holiday { background-color: #98dda1; color: black; font-weight: bold; }
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center; /* 中央寄せ */
+            }
+            .left {
+                margin-left: 0;
+            }
+            .right {
+                margin-left: 0;
+                margin-top: 20px; /* 左の下に余白 */
+                width: 100%;
+            }
+        }
 
     </style>
 </head>
@@ -69,7 +86,7 @@
 <div class="container">
     <!-- 左カラム -->
     <div class="left">
-    <h1>2025.09.08.24.59.59</h1>
+        <h1>2025.09.08.24.59.59</h1>
         <div id="clock">読み込み中...</div>
         <div id="calendar"></div>
     </div>
@@ -77,38 +94,38 @@
     <!-- 右カラム -->
     <div class="right">
         <div class="schedule" id="schedule">
-                <div>○1月01日　正月</div>
-                <div>○1月02日　正月</div>
-                <div>○1月03日　正月</div>
-                <div>○1月04日　正月</div>
-                <div>○1月05日　正月</div>
-                <div>○1月06日　正月</div>
-                <div>○1月07日　正月</div>
-                <div>○1月08日　正月</div>
-                <div>○1月13日　節分</div>
-                <div>○2月04日　建国記念日</div>
-                <div>○2月12日　春分</div>
-                <div>○2月18日　みどりの日</div>
-                <div>○2月30日　母の日</div>
-                <div>○3月16日　こどもの日</div>
-                <div>○3月28日　文化の日</div>
-                <div>○4月12日　夏至</div>
-                <div>○4月15日　海の日</div>
-                <div>○4月20日　父の日</div>
-                <div>○4月26日　奴隷解放記念日</div>
-                <div>○5月08日　クレイン・命日</div>
-                <div>○5月21日　夏祭り</div>
-                <div>○6月10日　入学式</div>
-                <div>○6月12日　収穫祭 七夕　秋分</div>
-                <div>○6月13日　収穫祭 運動会</div>
-                <div>○6月14日　収穫祭 秋祭り</div>
-                <div>○7月03日　ハロウィン</div>
-                <div>○7月06日　勤労感謝の日</div>
-                <div>○7月17日　国王誕生記念日</div>
-                <div>○8月12日　冬至</div>
-                <div>○8月25日　敬老の日</div>
-                <div>○8月29日　星の日</div>
-                <div>○8月32日　大晦日</div>
+            <div>1月01日　正月</div>
+            <div>1月02日　正月</div>
+            <div>1月03日　正月</div>
+            <div>1月04日　正月</div>
+            <div>1月05日　正月</div>
+            <div>1月06日　正月</div>
+            <div>1月07日　正月</div>
+            <div>1月08日　正月</div>
+            <div>1月13日　節分</div>
+            <div>2月04日　建国記念日</div>
+            <div>2月12日　春分</div>
+            <div>2月18日　みどりの日</div>
+            <div>2月30日　母の日</div>
+            <div>3月16日　こどもの日</div>
+            <div>3月28日　文化の日</div>
+            <div>4月12日　夏至</div>
+            <div>4月15日　海の日</div>
+            <div>4月20日　父の日</div>
+            <div>4月26日　奴隷解放記念日</div>
+            <div>5月08日　クレイン・命日</div>
+            <div>5月21日　夏祭り</div>
+            <div>6月10日　入学式</div>
+            <div>6月12日　収穫祭 七夕　秋分</div>
+            <div>6月13日　収穫祭 運動会</div>
+            <div>6月14日　収穫祭 秋祭り</div>
+            <div>7月03日　ハロウィン</div>
+            <div>7月06日　勤労感謝の日</div>
+            <div>7月17日　国王誕生記念日</div>
+            <div>8月12日　冬至</div>
+            <div>8月25日　敬老の日</div>
+            <div>8月29日　星の日</div>
+            <div>8月32日　大晦日</div>
         </div>
     </div>
 </div>
@@ -123,7 +140,6 @@
         hour: 14, minute: 18, second: 4
     };
 
-    // 🕰️ シーレンス時間進行（1日 = 29時間）
     const EARTH_TO_SILENSE_TIME_RATIO = 24 / 29; 
     const SILENSE_SECOND_IN_MS = 1000 * EARTH_TO_SILENSE_TIME_RATIO; 
 
@@ -164,10 +180,25 @@
         highlightSchedule(silenseTime.month, silenseTime.day);
     }
 
+    // 予定一覧から祝日リストを作成
+    function getHolidayMap() {
+        const holidays = {};
+        const schedule = document.getElementById("schedule").querySelectorAll("div");
+        schedule.forEach(div => {
+            const m = div.textContent.match(/^○(\d+)月(\d+)日/);
+            if (m) {
+                const key = `${parseInt(m[1],10)}-${parseInt(m[2],10)}`;
+                holidays[key] = true;
+            }
+        });
+        return holidays;
+    }
+
     function updateCalendar(year, month, today) {
         const daysInMonth = 32;
         const weeksInMonth = Math.ceil(daysInMonth / 8);
         const weekNames = ["水", "金", "地", "火", "木", "土", "天", "海"];
+        const holidays = getHolidayMap();
 
         let html = `<h2>${year}年 ${month}月</h2>`;
         html += `<table><tr>`;
@@ -181,11 +212,23 @@
             html += "<tr>";
             for (let i = 0; i < 8; i++) {
                 if (day <= daysInMonth) {
+                    const key = `${month}-${day}`;
+                    const isHoliday = holidays[key];
+                    let cls = "weekday"; // デフォルト
+
+                    if (weekNames[i] === "天") cls = "ten";
+                    if (weekNames[i] === "海") cls = "umi";
+                    if (isHoliday) cls = "holiday"; // 祝日が優先
+
+                    // 当日判定
                     if (day === today) {
-                        html += `<td class="highlight">${day}</td>`;
-                    } else {
-                        html += `<td>${day}</td>`;
+                        if (isHoliday) cls = "today-holiday";
+                        else if (weekNames[i] === "天") cls = "today-ten";
+                        else if (weekNames[i] === "海") cls = "today-umi";
+                        else cls = "today-weekday";
                     }
+
+                    html += `<td class="${cls}">${day}</td>`;
                     day++;
                 } else {
                     html += `<td></td>`;
@@ -198,20 +241,18 @@
         document.getElementById("calendar").innerHTML = html;
     }
 
-// 今日の予定に枠をつける（行全体を囲む）
-function highlightSchedule(month, day) {
-    const schedule = document.getElementById("schedule");
-    const children = schedule.querySelectorAll("div");
+    // 今日の予定に枠をつける
+    function highlightSchedule(month, day) {
+        const schedule = document.getElementById("schedule");
+        const children = schedule.querySelectorAll("div");
 
-    children.forEach(div => {
-        div.classList.remove("highlight-event"); // リセット
-        if (div.textContent.startsWith(`○${month}月${day}日`)) {
-            div.classList.add("highlight-event"); // 今日の予定を強調
-        }
-    });
-}
-
-
+        children.forEach(div => {
+            div.classList.remove("highlight-event");
+            if (div.textContent.startsWith(`○${month}月${String(day).padStart(2,"0")}日`)) {
+                div.classList.add("highlight-event");
+            }
+        });
+    }
 
     setInterval(updateClock, SILENSE_SECOND_IN_MS);
     updateClock();
