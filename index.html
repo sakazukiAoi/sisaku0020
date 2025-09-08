@@ -5,118 +5,217 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>æpーbeﾄᖇƟƸ時計 & カレンダー</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #222; color: white; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #222; 
+            color: white; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+        }
+        .left, .right {
+            padding: 20px;
+        }
+        .left {
+            flex: 1;
+            text-align: center;
+            margin-left: 18%;
+        }
+        .right {
+            margin-left: 100px;
+            flex: 1;
+        }
         h1 { margin-top: 20px; }
         #clock { font-size: 2em; margin: 10px 0; }
-        #calendar { margin-top: 20px; }
         table { border-collapse: collapse; margin: auto; }
-        td, th { border: 1px solid white; padding: 8px; }
+        td, th { border: 1px solid white; padding: 8px; text-align: center; }
         th { background-color: #444; }
+        .highlight {
+            background-color: white;
+            color: black;
+            font-weight: bold;
+        }
+        .schedule {
+            text-align: left;
+            font-size: 0.8em;
+            line-height: 2em;
+        }
+        .active-day {
+            font-weight: bold;
+        }
+.schedule div {
+    margin: 1px 0;  /* 各行の間隔を小さめに */
+}
+.highlight-event {
+    padding: 6px 10px;
+    border: 2px solid white;
+    border-radius: 6px;
+    background-color: #333;
+    font-weight: bold;
+}
+
+
     </style>
 </head>
 <body>
 
-    <h1>2025.4.11.24.59.59</h1>
-    <div id="clock">読み込み中...</div>
-    <div id="calendar"></div>
+<div class="container">
+    <!-- 左カラム -->
+    <div class="left">
+    <h1>2025.09.08.24.59.59</h1>
+        <div id="clock">読み込み中...</div>
+        <div id="calendar"></div>
+    </div>
 
-    <script>
-        // 🌏 地球基準の初期時刻（2025/2/13 14:10:21 UTC）
-        const baseEarthTime = new Date("2025-02-13T14:10:21Z").getTime(); 
+    <!-- 右カラム -->
+    <div class="right">
+        <div class="schedule" id="schedule">
+                <div>○1月01日　正月</div>
+                <div>○1月02日　正月</div>
+                <div>○1月03日　正月</div>
+                <div>○1月04日　正月</div>
+                <div>○1月05日　正月</div>
+                <div>○1月06日　正月</div>
+                <div>○1月07日　正月</div>
+                <div>○1月08日　正月</div>
+                <div>○1月13日　節分</div>
+                <div>○2月04日　建国記念日</div>
+                <div>○2月12日　春分</div>
+                <div>○2月18日　みどりの日</div>
+                <div>○2月30日　母の日</div>
+                <div>○3月16日　こどもの日</div>
+                <div>○3月28日　文化の日</div>
+                <div>○4月12日　夏至</div>
+                <div>○4月15日　海の日</div>
+                <div>○4月20日　父の日</div>
+                <div>○4月26日　奴隷解放記念日</div>
+                <div>○5月08日　クレイン・命日</div>
+                <div>○5月21日　夏祭り</div>
+                <div>○6月10日　入学式</div>
+                <div>○6月12日　収穫祭 七夕　秋分</div>
+                <div>○6月13日　収穫祭 運動会</div>
+                <div>○6月14日　収穫祭 秋祭り</div>
+                <div>○7月03日　ハロウィン</div>
+                <div>○7月06日　勤労感謝の日</div>
+                <div>○7月17日　国王誕生記念日</div>
+                <div>○8月12日　冬至</div>
+                <div>○8月25日　敬老の日</div>
+                <div>○8月29日　星の日</div>
+                <div>○8月32日　大晦日</div>
+        </div>
+    </div>
+</div>
 
-        // ⏳ シーレンス初期時間（2082/6/17 14:18:4）
-        const baseSilense = {
-            year: 2082, month: 6, day: 17,
-            hour: 14, minute: 18, second: 4
+<script>
+    // 🌏 地球基準の初期時刻（2025/2/13 14:10:21 UTC）
+    const baseEarthTime = new Date("2025-02-13T14:10:21Z").getTime(); 
+
+    // ⏳ シーレンス初期時間（2082/6/17 14:18:4）
+    const baseSilense = {
+        year: 2082, month: 6, day: 17,
+        hour: 14, minute: 18, second: 4
+    };
+
+    // 🕰️ シーレンス時間進行（1日 = 29時間）
+    const EARTH_TO_SILENSE_TIME_RATIO = 24 / 29; 
+    const SILENSE_SECOND_IN_MS = 1000 * EARTH_TO_SILENSE_TIME_RATIO; 
+
+    function calculateSilenseTime() {
+        const now = new Date().getTime();
+        const elapsedEarthSeconds = (now - baseEarthTime) / 1000; 
+        const elapsedSilenseSeconds = elapsedEarthSeconds * EARTH_TO_SILENSE_TIME_RATIO; 
+
+        let totalSeconds = baseSilense.second + Math.floor(elapsedSilenseSeconds);
+        let totalMinutes = baseSilense.minute + Math.floor(totalSeconds / 60);
+        let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
+        let totalDays = baseSilense.day + Math.floor(totalHours / 24);
+
+        let addedMonths = Math.floor((totalDays - 1) / 32);
+        let currentDay = ((totalDays - 1) % 32) + 1;
+
+        let totalMonths = baseSilense.month + addedMonths;
+        let addedYears = Math.floor((totalMonths - 1) / 8); 
+        let currentMonth = ((totalMonths - 1) % 8) + 1;
+
+        let currentYear = baseSilense.year + addedYears;
+
+        let currentSecond = totalSeconds % 60;
+        let currentMinute = totalMinutes % 60;
+        let currentHour = totalHours % 24;
+
+        function pad(num) { return num.toString().padStart(2, "0"); }
+        return {
+            timeString: `${currentYear}/${pad(currentMonth)}/${pad(currentDay)} ${pad(currentHour)}:${pad(currentMinute)}:${pad(currentSecond)}`,
+            year: currentYear, month: currentMonth, day: currentDay
         };
+    }
 
-        // 🕰️ シーレンス時間進行（1日 = 29時間）
-        const EARTH_TO_SILENSE_TIME_RATIO = 24 / 29; // シーレンスの1秒 = 地球の約0.827秒
-        const SILENSE_SECOND_IN_MS = 1000 * EARTH_TO_SILENSE_TIME_RATIO; // 0.827秒
+    function updateClock() {
+        const silenseTime = calculateSilenseTime();
+        document.getElementById("clock").textContent = silenseTime.timeString;
+        updateCalendar(silenseTime.year, silenseTime.month, silenseTime.day);
+        highlightSchedule(silenseTime.month, silenseTime.day);
+    }
 
-        function calculateSilenseTime() {
-            const now = new Date().getTime();
-            const elapsedEarthSeconds = (now - baseEarthTime) / 1000; // 🌏 経過秒数（地球時間）
-            const elapsedSilenseSeconds = elapsedEarthSeconds * EARTH_TO_SILENSE_TIME_RATIO; // ⏳ シーレンス時間に変換
+    function updateCalendar(year, month, today) {
+        const daysInMonth = 32;
+        const weeksInMonth = Math.ceil(daysInMonth / 8);
+        const weekNames = ["水", "金", "地", "火", "木", "土", "天", "海"];
 
-            // 🔢 シーレンス時間を計算
-            let totalSeconds = baseSilense.second + Math.floor(elapsedSilenseSeconds);
-            let totalMinutes = baseSilense.minute + Math.floor(totalSeconds / 60);
-            let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
-            let totalDays = baseSilense.day + Math.floor(totalHours / 24);
-
-            // 月と年の進行を修正
-            let addedMonths = Math.floor((totalDays - 1) / 32); // 32日で1ヶ月進む
-            let currentDay = ((totalDays - 1) % 32) + 1;
-
-            let totalMonths = baseSilense.month + addedMonths;
-            let addedYears = Math.floor((totalMonths - 1) / 8); // 8ヶ月で1年進む
-            let currentMonth = ((totalMonths - 1) % 8) + 1;
-
-            let currentYear = baseSilense.year + addedYears;
-
-            // 時間も剰余で修正
-            let currentSecond = totalSeconds % 60;
-            let currentMinute = totalMinutes % 60;
-            let currentHour = totalHours % 24;
-
-            // 📌 マイナス表記防止（オーバーフロー補正）
-            if (currentSecond < 0) currentSecond += 60;
-            if (currentMinute < 0) currentMinute += 60;
-            if (currentHour < 0) currentHour += 24;
-            if (currentDay < 1) currentDay = 32;
-            if (currentMonth < 1) currentMonth = 8;
-
-            // ⌚ フォーマット
-            function pad(num) { return num.toString().padStart(2, "0"); }
-            return {
-                timeString: `${currentYear}/${pad(currentMonth)}/${pad(currentDay)} ${pad(currentHour)}:${pad(currentMinute)}:${pad(currentSecond)}`,
-                year: currentYear, month: currentMonth, day: currentDay
-            };
+        let html = `<h2>${year}年 ${month}月</h2>`;
+        html += `<table><tr>`;
+        for (let i = 0; i < 8; i++) {
+            html += `<th>${weekNames[i]}</th>`;
         }
+        html += `</tr>`;
 
-        function updateClock() {
-            const silenseTime = calculateSilenseTime();
-            document.getElementById("clock").textContent = silenseTime.timeString;
-            updateCalendar(silenseTime.year, silenseTime.month);
-        }
-
-        // 📅 カレンダー表示
-        function updateCalendar(year, month) {
-            const daysInMonth = 32;
-            const weeksInMonth = Math.ceil(daysInMonth / 8);
-            const weekNames = ["水", "金", "地", "火", "木", "土", "天", "海"]; // シーレンス曜日
-
-            let html = `<h2>${year}年 ${month}月</h2>`;
-            html += `<table><tr>`;
+        let day = 1;
+        for (let week = 0; week < weeksInMonth; week++) {
+            html += "<tr>";
             for (let i = 0; i < 8; i++) {
-                html += `<th>${weekNames[i]}</th>`;
-            }
-            html += `</tr>`;
-
-            let day = 1;
-            for (let week = 0; week < weeksInMonth; week++) {
-                html += "<tr>";
-                for (let i = 0; i < 8; i++) {
-                    if (day <= daysInMonth) {
-                        html += `<td>${day}</td>`;
-                        day++;
+                if (day <= daysInMonth) {
+                    if (day === today) {
+                        html += `<td class="highlight">${day}</td>`;
                     } else {
-                        html += `<td></td>`;
+                        html += `<td>${day}</td>`;
                     }
+                    day++;
+                } else {
+                    html += `<td></td>`;
                 }
-                html += "</tr>";
             }
-            html += "</table>";
-
-            document.getElementById("calendar").innerHTML = html;
+            html += "</tr>";
         }
+        html += "</table>";
 
-        // 🕰️ シーレンスの1秒ごとに更新（0.827秒）
-        setInterval(updateClock, SILENSE_SECOND_IN_MS);
-        updateClock(); // 初回実行
+        document.getElementById("calendar").innerHTML = html;
+    }
 
-    </script>
+// 今日の予定に枠をつける（行全体を囲む）
+function highlightSchedule(month, day) {
+    const schedule = document.getElementById("schedule");
+    const children = schedule.querySelectorAll("div");
+
+    children.forEach(div => {
+        div.classList.remove("highlight-event"); // リセット
+        if (div.textContent.startsWith(`○${month}月${day}日`)) {
+            div.classList.add("highlight-event"); // 今日の予定を強調
+        }
+    });
+}
+
+
+
+    setInterval(updateClock, SILENSE_SECOND_IN_MS);
+    updateClock();
+</script>
 
 </body>
 </html>
