@@ -185,7 +185,7 @@
         const holidays = {};
         const schedule = document.getElementById("schedule").querySelectorAll("div");
         schedule.forEach(div => {
-            const m = div.textContent.match(/^○(\d+)月(\d+)日/);
+            const m = div.textContent.match(/(\d+)月(\d+)日/);
             if (m) {
                 const key = `${parseInt(m[1],10)}-${parseInt(m[2],10)}`;
                 holidays[key] = true;
