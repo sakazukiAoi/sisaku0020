@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>æpーbeﾄᖇƟƸ時計 & カレンダー</title>
+    <title>シーレンス時間 統合ツール v4</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -18,245 +18,373 @@
         .container {
             display: flex;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1100px;
+            position: relative;
         }
-        .left, .right {
-            padding: 20px;
+
+        /* ===== タブボタン（PC版） ===== */
+        .tab-menu {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            left: -80px;
+            top: 100px;
+            gap: 10px;
         }
-        .left {
-            flex: 1;
-            text-align: center;
-            margin-left: 18%;
+        .tab-btn {
+            width: 60px;
+            height: 60px;
+            background-color: #ccc;
+            color: #4686da;
+            font-size: 2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
-        .right {
-            margin-left: 100px;
-            flex: 1;
+        .tab-btn.active {
+            border: 3px solid #4686da;
+            background-color: #eee;
         }
-        h1 { margin-top: 20px; }
-        #clock { font-size: 2em; margin: 10px 0; }
+
+        /* ===== コンテンツ表示制御 ===== */
+        .content-section { display: none; width: 100%; }
+        .content-section.active { display: flex; }
+
+        .left, .right { padding: 20px; }
+        .left { flex: 1; text-align: center; }
+        .right { flex: 1; margin-left: 50px; }
+
+        /* カレンダー・時計スタイル */
+        h1 { margin-top: 20px; font-size: 1.5em; }
+        #clock, #silenseCurrentTime { font-size: 2em; margin: 10px 0; color: #fff; }
+        #earthCurrentTimeDisplay, #earthTitle { color: #888; font-size: 0.9em; }
         table { border-collapse: collapse; margin: auto; }
         td, th { border: 1px solid white; padding: 8px; text-align: center; }
         th { background-color: #444; }
-        .schedule {
-            text-align: left;
-            font-size: 0.8em;
-            line-height: 2em;
-        }
-        .schedule div { margin: 1px 0; }
+        .schedule { text-align: left; font-size: 0.8em; line-height: 2em; }
         .highlight-event {
-            padding: 6px 10px;
+            padding: 4px 8px;
             border: 2px solid white;
             border-radius: 6px;
             background-color: #333;
             font-weight: bold;
         }
 
-        /* ===== カレンダー色分け ===== */
-        .weekday { background-color: #222; }      /* 平日 */
+        /* カレンダー色分け */
+        .weekday { background-color: #222; }
         .today-weekday { background-color: white; color: black; font-weight: bold; }
-
-        .ten { background-color: #4686da; }       /* 天日 */
+        .ten { background-color: #4686da; }
         .today-ten { background-color: #bad4fc; color: black; font-weight: bold; }
-
-        .umi { background-color: #b15050; }       /* 海日 */
+        .umi { background-color: #b15050; }
         .today-umi { background-color: #fac6c6; color: black; font-weight: bold; }
-
-        .holiday { background-color: #4b9655; }   /* 祝日 */
+        .holiday { background-color: #4b9655; }
         .today-holiday { background-color: #98dda1; color: black; font-weight: bold; }
-        /* スマホ対応 */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                align-items: center; /* 中央寄せ */
-            }
-            .left {
-                margin-left: 0;
-            }
-            .right {
-                margin-left: 0;
-                margin-top: 20px; /* 左の下に余白 */
-                width: 100%;
-            }
+
+        /* フォーム・変換ツール共通スタイル */
+        .calc-section {
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group { margin: 10px 0; text-align: left; }
+        label { display: block; font-size: 0.8em; margin-bottom: 5px; color: #bbb; }
+        input, textarea {
+            width: 100%; padding: 8px; background: #444; border: 1px solid #555;
+            color: white; border-radius: 4px; box-sizing: border-box;
+        }
+        textarea { height: 100px; resize: vertical; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .silense-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 5px; }
+        button {
+            width: 100%; padding: 10px; background: #4686da; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;
+        }
+        .button-secondary { background: #4b9655; }
+        .result-box {
+            margin-top: 10px; padding: 15px; background: #1a1a1a;
+            border-left: 4px solid #4686da; font-size: 0.9em; min-height: 1.2em;
+        }
+        .output-area {
+            background-color: #1a1a1a; border: 1px solid #444; border-radius: 4px;
+            padding: 10px; margin-top: 5px; min-height: 50px; white-space: pre-wrap;
+            word-break: break-all; font-family: 'Courier New', monospace;
         }
 
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            .tab-menu { display: none; }
+            .content-section { display: flex !important; flex-direction: column; align-items: center; }
+            .container { flex-direction: column; }
+            .left, .right { margin-left: 0; width: 100%; padding: 10px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 左カラム -->
-    <div class="left">
-        <h1>2025.09.08.24.59.59</h1>
-        <div id="clock">読み込み中...</div>
-        <div id="calendar"></div>
+    <div class="tab-menu">
+        <button class="tab-btn active" onclick="showTab('calendar-tab', this)">1</button>
+        <button class="tab-btn" onclick="showTab('calc-tab', this)">2</button>
+        <button class="tab-btn" onclick="showTab('conv-tab', this)">3</button>
     </div>
 
-    <!-- 右カラム -->
-    <div class="right">
-        <div class="schedule" id="schedule">
-            <div>1月01日　正月</div>
-            <div>1月02日　正月</div>
-            <div>1月03日　正月</div>
-            <div>1月04日　正月</div>
-            <div>1月05日　正月</div>
-            <div>1月06日　正月</div>
-            <div>1月07日　正月</div>
-            <div>1月08日　正月</div>
-            <div>1月13日　節分</div>
-            <div>2月04日　建国記念日</div>
-            <div>2月12日　春分</div>
-            <div>2月18日　みどりの日</div>
-            <div>2月30日　母の日</div>
-            <div>3月16日　こどもの日</div>
-            <div>3月28日　文化の日</div>
-            <div>4月12日　夏至</div>
-            <div>4月15日　海の日</div>
-            <div>4月20日　父の日</div>
-            <div>4月26日　奴隷解放記念日</div>
-            <div>5月08日　クレイン・命日</div>
-            <div>5月21日　夏祭り</div>
-            <div>6月10日　入学式</div>
-            <div>6月12日　収穫祭 七夕　秋分</div>
-            <div>6月13日　収穫祭 運動会</div>
-            <div>6月14日　収穫祭 秋祭り</div>
-            <div>7月03日　トック</div>
-            <div>7月06日　勤労感謝の日</div>
-            <div>7月17日　国王誕生記念日</div>
-            <div>8月12日　冬至</div>
-            <div>8月25日　敬老の日</div>
-            <div>8月29日　星の日</div>
-            <div>8月32日　大晦日</div>
+    <div id="calendar-tab" class="content-section active">
+        <div class="left">
+            <div id="earthTitle">0000.00.00.00.00.00</div>
+            <div id="clock">読み込み中...</div>
+            <div id="calendar"></div>
+        </div>
+        <div class="right">
+            <div class="schedule" id="schedule">
+                <div>1月01日　正月</div><div>1月02日　正月</div><div>1月03日　正月</div><div>1月04日　正月</div>
+                <div>1月13日　節分</div><div>2月04日　建国記念日</div><div>2月12日　春分</div><div>2月18日　みどりの日</div>
+                <div>2月30日　母の日</div><div>3月16日　こどもの日</div><div>3月28日　文化の日</div><div>4月12日　夏至</div>
+                <div>4月15日　海の日</div><div>4月20日　父の日</div><div>4月26日　奴隷解放記念日</div><div>5月08日　クレイン・命日</div>
+                <div>5月21日　夏祭り</div><div>6月10日　入学式</div><div>6月12日　収穫祭 七夕 秋分</div><div>6月13日　収穫祭 運動会</div>
+                <div>6月14日　収穫祭 秋祭り</div><div>7月03日　トック</div><div>7月06日　勤労感謝の日</div><div>7月17日　国王誕生記念日</div>
+                <div>8月12日　冬至</div><div>8月25日　敬老の日</div><div>8月29日　星の日</div><div>8月32日　大晦日</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="calc-tab" class="content-section">
+        <div class="left">
+            <h1>🌍⇔⏰</h1>
+            <p>現在のシーレンス時間</p>
+            <div id="silenseCurrentTime">--:--:--</div>
+            <div id="earthCurrentTimeDisplay">地球時間: --:--:--</div>
+        </div>
+        <div class="right">
+            <h2>地球時間 → シーレンス時間</h2>
+            <div class="calc-section">
+                <div class="input-row">
+                    <div class="input-group"><label>基準日時（地球）</label><input type="datetime-local" id="earthBaseDateTime" step="1"></div>
+                    <div class="input-group"><label>目標日時（地球）</label><input type="datetime-local" id="earthTargetDateTime" step="1"></div>
+                </div>
+                <button onclick="calculateEarthToSilense()">変換する</button>
+                <div id="earthToSilenseResult" class="result-box" style="display:none;">
+                    <div style="color:#98dda1; font-weight:bold; font-size:1.2em;" id="earthToSilenseValue"></div>
+                    <hr style="border:0; border-top:1px solid #444; margin:10px 0;">
+                    <div id="earthToSilenseDetail" style="font-size:0.85em; color:#ccc; line-height:1.6em;"></div>
+                </div>
+            </div>
+
+            <h2>シーレンス時間 → 地球時間</h2>
+            <div class="calc-section">
+                <div class="silense-inputs">
+                    <div class="input-group"><label>年</label><input type="number" id="silenseYear"></div>
+                    <div class="input-group"><label>月(1-8)</label><input type="number" id="silenseMonth"></div>
+                    <div class="input-group"><label>日(1-32)</label><input type="number" id="silenseDay"></div>
+                </div>
+                <div class="silense-inputs">
+                    <div class="input-group"><label>時</label><input type="number" id="silenseHour"></div>
+                    <div class="input-group"><label>分</label><input type="number" id="silenseMinute"></div>
+                    <div class="input-group"><label>秒</label><input type="number" id="silenseSecond"></div>
+                </div>
+                <button class="button-secondary" onclick="calculateSilenseToEarth()">変換する</button>
+                <div id="silenseToEarthResult" class="result-box" style="display:none;">
+                    <div id="silenseToEarthValue" style="color:#98dda1; font-weight:bold; font-size:1.2em;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="conv-tab" class="content-section">
+        <div class="left">
+            <h1>10 ⇔ 16</h1>
+            <div class="calc-section">
+                <div class="input-group"><label>10進数</label><input type="text" id="decimal-input"></div>
+                <div id="hex-result" class="result-box"></div>
+                <div class="input-group" style="margin-top:20px;"><label>16進数</label><input type="text" id="hex-input"></div>
+                <div id="decimal-result" class="result-box"></div>
+            </div>
+        </div>
+        <div class="right">
+            <h2>naGG変換器</h2>
+            <div class="calc-section">
+                <div class="input-group">
+                    <label>ひらがなを入力</label>
+                    <textarea id="text-input" placeholder="ここに入力..."></textarea>
+                </div>
+                <label>ローマ字に変換</label>
+                <div id="romaji-output" class="output-area"></div>
+                <label style="margin-top:10px;">naGGを転写</label>
+                <div id="special-output" class="output-area" style="color: #4686da; font-weight: bold;"></div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // 🌏 地球基準の初期時刻（2025/2/13 14:10:21 UTC）
-    const baseEarthTime = new Date("2025-02-13T14:10:21Z").getTime(); 
+    // --- 定数定義 ---
+    const EARTH_TO_SILENSE_RATIO = 24 / 29;
+    const SILENSE_TO_EARTH_RATIO = 29 / 24;
+    const baseEarthTime = new Date("2025-02-13T14:10:21Z").getTime();
+    const baseSilense = { year: 2082, month: 6, day: 17, hour: 14, minute: 18, second: 4 };
 
-    // ⏳ シーレンス初期時間（2082/6/17 14:18:4）
-    const baseSilense = {
-        year: 2082, month: 6, day: 17,
-        hour: 14, minute: 18, second: 4
-    };
+    // --- タブ切り替え ---
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
 
-    const EARTH_TO_SILENSE_TIME_RATIO = 24 / 29; 
-    const SILENSE_SECOND_IN_MS = 1000 * EARTH_TO_SILENSE_TIME_RATIO; 
-
-    function calculateSilenseTime() {
-        const now = new Date().getTime();
-        const elapsedEarthSeconds = (now - baseEarthTime) / 1000; 
-        const elapsedSilenseSeconds = elapsedEarthSeconds * EARTH_TO_SILENSE_TIME_RATIO; 
-
-        let totalSeconds = baseSilense.second + Math.floor(elapsedSilenseSeconds);
-        let totalMinutes = baseSilense.minute + Math.floor(totalSeconds / 60);
-        let totalHours = baseSilense.hour + Math.floor(totalMinutes / 60);
-        let totalDays = baseSilense.day + Math.floor(totalHours / 24);
-
-        let addedMonths = Math.floor((totalDays - 1) / 32);
-        let currentDay = ((totalDays - 1) % 32) + 1;
-
-        let totalMonths = baseSilense.month + addedMonths;
-        let addedYears = Math.floor((totalMonths - 1) / 8); 
-        let currentMonth = ((totalMonths - 1) % 8) + 1;
-
-        let currentYear = baseSilense.year + addedYears;
-
-        let currentSecond = totalSeconds % 60;
-        let currentMinute = totalMinutes % 60;
-        let currentHour = totalHours % 24;
-
-        function pad(num) { return num.toString().padStart(2, "0"); }
+    // --- シーレンス時間計算コア ---
+    function calculateSilenseTime(targetMs = null) {
+        const now = targetMs || new Date().getTime();
+        const elapsedEarthSec = (now - baseEarthTime) / 1000;
+        const elapsedSilenseSec = elapsedEarthSec * EARTH_TO_SILENSE_RATIO;
+        let totalSec = baseSilense.second + Math.floor(elapsedSilenseSec);
+        let totalMin = baseSilense.minute + Math.floor(totalSec / 60);
+        let totalHr = baseSilense.hour + Math.floor(totalMin / 60);
+        let totalDay = baseSilense.day + Math.floor(totalHr / 24);
+        let addedMo = Math.floor((totalDay - 1) / 32);
+        let curDay = ((totalDay - 1) % 32) + 1;
+        let totalMo = baseSilense.month + addedMo;
+        let curYear = baseSilense.year + Math.floor((totalMo - 1) / 8);
+        let curMo = ((totalMo - 1) % 8) + 1;
+        const pad = (n) => n.toString().padStart(2, "0");
         return {
-            timeString: `${currentYear}/${pad(currentMonth)}/${pad(currentDay)} ${pad(currentHour)}:${pad(currentMinute)}:${pad(currentSecond)}`,
-            year: currentYear, month: currentMonth, day: currentDay
+            formatted: `${curYear}/${pad(curMo)}/${pad(curDay)} ${pad(totalHr % 24)}:${pad(totalMin % 60)}:${pad(totalSec % 60)}`,
+            year: curYear, month: curMo, day: curDay, hour: totalHr % 24, min: totalMin % 60, sec: totalSec % 60
         };
     }
 
-    function updateClock() {
-        const silenseTime = calculateSilenseTime();
-        document.getElementById("clock").textContent = silenseTime.timeString;
-        updateCalendar(silenseTime.year, silenseTime.month, silenseTime.day);
-        highlightSchedule(silenseTime.month, silenseTime.day);
-    }
-
-    // 予定一覧から祝日リストを作成
-    function getHolidayMap() {
-        const holidays = {};
-        const schedule = document.getElementById("schedule").querySelectorAll("div");
-        schedule.forEach(div => {
-            const m = div.textContent.match(/(\d+)月(\d+)日/);
-            if (m) {
-                const key = `${parseInt(m[1],10)}-${parseInt(m[2],10)}`;
-                holidays[key] = true;
-            }
-        });
-        return holidays;
+    // --- メイン更新処理 (1秒ごと) ---
+    function updateAll() {
+        const now = new Date();
+        const silense = calculateSilenseTime();
+        
+        // 時計表示
+        const pad = (n) => n.toString().padStart(2, "0");
+        const eStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}.${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}`;
+        document.getElementById("earthTitle").textContent = eStr;
+        document.getElementById("clock").textContent = silense.formatted;
+        document.getElementById("silenseCurrentTime").textContent = silense.formatted;
+        document.getElementById("earthCurrentTimeDisplay").textContent = "地球時間: " + now.toLocaleString();
+        
+        // カレンダーとスケジュール更新
+        updateCalendar(silense.year, silense.month, silense.day);
+        highlightSchedule(silense.month, silense.day);
     }
 
     function updateCalendar(year, month, today) {
-        const daysInMonth = 32;
-        const weeksInMonth = Math.ceil(daysInMonth / 8);
         const weekNames = ["水", "金", "地", "火", "木", "土", "天", "海"];
-        const holidays = getHolidayMap();
-
-        let html = `<h2>${year}年 ${month}月</h2>`;
-        html += `<table><tr>`;
-        for (let i = 0; i < 8; i++) {
-            html += `<th>${weekNames[i]}</th>`;
-        }
-        html += `</tr>`;
-
-        let day = 1;
-        for (let week = 0; week < weeksInMonth; week++) {
-            html += "<tr>";
-            for (let i = 0; i < 8; i++) {
-                if (day <= daysInMonth) {
-                    const key = `${month}-${day}`;
-                    const isHoliday = holidays[key];
-                    let cls = "weekday"; // デフォルト
-
-                    if (weekNames[i] === "天") cls = "ten";
-                    if (weekNames[i] === "海") cls = "umi";
-                    if (isHoliday) cls = "holiday"; // 祝日が優先
-
-                    // 当日判定
-                    if (day === today) {
-                        if (isHoliday) cls = "today-holiday";
-                        else if (weekNames[i] === "天") cls = "today-ten";
-                        else if (weekNames[i] === "海") cls = "today-umi";
-                        else cls = "today-weekday";
-                    }
-
-                    html += `<td class="${cls}">${day}</td>`;
-                    day++;
-                } else {
-                    html += `<td></td>`;
-                }
+        const holidays = {};
+        document.querySelectorAll("#schedule div").forEach(div => {
+            const m = div.textContent.match(/(\d+)月(\d+)日/);
+            if (m) holidays[`${parseInt(m[1])}-${parseInt(m[2])}`] = true;
+        });
+        let html = `<h2>${year}年 ${month}月</h2><table><tr>`;
+        weekNames.forEach(w => html += `<th>${w}</th>`);
+        html += `</tr><tr>`;
+        for (let day = 1; day <= 32; day++) {
+            const wIdx = (day - 1) % 8;
+            const isHoliday = holidays[`${month}-${day}`];
+            let cls = "weekday";
+            if (weekNames[wIdx] === "天") cls = "ten";
+            if (weekNames[wIdx] === "海") cls = "umi";
+            if (isHoliday) cls = "holiday";
+            if (day === today) {
+                if (isHoliday) cls = "today-holiday";
+                else if (weekNames[wIdx] === "天") cls = "today-ten";
+                else if (weekNames[wIdx] === "海") cls = "today-umi";
+                else cls = "today-weekday";
             }
-            html += "</tr>";
+            html += `<td class="${cls}">${day}</td>`;
+            if (day % 8 === 0 && day < 32) html += `</tr><tr>`;
         }
-        html += "</table>";
-
-        document.getElementById("calendar").innerHTML = html;
+        document.getElementById("calendar").innerHTML = html + "</tr></table>";
     }
 
-    // 今日の予定に枠をつける
     function highlightSchedule(month, day) {
-        const schedule = document.getElementById("schedule");
-        const children = schedule.querySelectorAll("div");
-
-        children.forEach(div => {
-            div.classList.remove("highlight-event");
-            if (div.textContent.startsWith(`${month}月${String(day).padStart(2,"0")}日`)) {
-                div.classList.add("highlight-event");
-            }
+        document.querySelectorAll("#schedule div").forEach(div => {
+            div.classList.toggle("highlight-event", div.textContent.startsWith(`${month}月${String(day).padStart(2,"0")}日`));
         });
     }
 
-    setInterval(updateClock, SILENSE_SECOND_IN_MS);
-    updateClock();
-</script>
+    // --- 時間変換ロジック (Tab 2) ---
+    function calculateEarthToSilense() {
+        const bVal = document.getElementById('earthBaseDateTime').value;
+        const tVal = document.getElementById('earthTargetDateTime').value;
+        if (!bVal || !tVal) { alert("日時を選択してください"); return; }
 
+        const bTime = new Date(bVal).getTime();
+        const tTime = new Date(tVal).getTime();
+        const diffSec = Math.abs(tTime - bTime) / 1000;
+        const sSecTotal = diffSec * EARTH_TO_SILENSE_RATIO;
+
+        const d = Math.floor(sSecTotal / 86400);
+        const h = Math.floor((sSecTotal % 86400) / 3600);
+        const m = Math.floor((sSecTotal % 3600) / 60);
+        const s = Math.floor(sSecTotal % 60);
+
+        const bSilense = calculateSilenseTime(bTime);
+        const tSilense = calculateSilenseTime(tTime);
+
+        document.getElementById('earthToSilenseValue').textContent = `${d}日 ${h}時間 ${m}分 ${s}秒`;
+        document.getElementById('earthToSilenseDetail').innerHTML = 
+            `シーレンス時間<br>` +
+            `基準時: <strong>${bSilense.formatted}</strong><br>` +
+            `目標時: <strong>${tSilense.formatted}</strong><br>`;
+        document.getElementById('earthToSilenseResult').style.display = 'block';
+    }
+
+    function calculateSilenseToEarth() {
+        const y = parseInt(document.getElementById('silenseYear').value);
+        const mo = parseInt(document.getElementById('silenseMonth').value);
+        const d = parseInt(document.getElementById('silenseDay').value);
+        const h = parseInt(document.getElementById('silenseHour').value) || 0;
+        const mi = parseInt(document.getElementById('silenseMinute').value) || 0;
+        const s = parseInt(document.getElementById('silenseSecond').value) || 0;
+
+        const dayDiff = ((y - baseSilense.year) * 8 * 32) + ((mo - baseSilense.month) * 32) + (d - baseSilense.day);
+        const secDiff = (dayDiff * 86400) + ((h - baseSilense.hour) * 3600) + ((mi - baseSilense.minute) * 60) + (s - baseSilense.second);
+        
+        const eTime = new Date(baseEarthTime + (secDiff * SILENSE_TO_EARTH_RATIO * 1000));
+        document.getElementById('silenseToEarthValue').textContent = "対応する地球時間: " + eTime.toLocaleString();
+        document.getElementById('silenseToEarthResult').style.display = 'block';
+    }
+
+    // --- 数値・文字変換ロジック (Tab 3) ---
+    document.getElementById("decimal-input").addEventListener("input", function() {
+        const v = parseInt(this.value, 10);
+        document.getElementById("hex-result").textContent = isNaN(v) ? "" : v.toString(16).toUpperCase();
+    });
+    document.getElementById("hex-input").addEventListener("input", function() {
+        const v = parseInt(this.value, 16);
+        document.getElementById("decimal-result").textContent = isNaN(v) ? "" : v.toString(10);
+    });
+
+    const charTransformDict = {
+        'a': 'π;', 'b': 'ス', 'c': 'y', 'd': '二', 'e': 'e', 'f': 'S', 'g': 'R', 'h': '|으', 'i': 'p', 'j': '6',
+        'k': 'つ', 'l': 'æ', 'm': '牛', 'n': 'ﾄᖇ', 'o': '月', 'p': 'Đ', 'q': 'h', 'r': 'b', 's': 'Ɵ', 't': 'G',
+        'u': 'Ƹ', 'v': 'g', 'w': 'う', 'x': 'ħ', 'y': 'a', 'z': 'ჩ', '!': 'Ⴘ', '?': '-ə', '「': 'ɾ', '【': 'ɾ',
+        '{': 'ɾ', '｛': 'ɾ', '[': 'ɾ', '」': 'ɿ', '】': 'ɿ', '}': 'ɿ', ']': 'ɿ'
+    };
+    const hiraMap = {'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'wa','し':'li','す':'su','せ':'se','そ':'so','た':'ta','ち':'tci','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'wyi','ふ':'hu','へ':'he','ほ':'ho','ま':'ma','み':'myi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ryi','る':'ru','れ':'re','ろ':'ro','わ':'ua','を':'o','ん':'n','が':'ga','ぎ':'gyi','ぐ':'gu','げ':'ge','ご':'go','ざ':'dza','じ':'ji','ず':'dzu','ぜ':'dze','ぞ':'dzo','だ':'da','ぢ':'ji','づ':'dzu','で':'de','ど':'do','ぱ':'pa','ぴ':'pyi','ぷ':'pu','ぺ':'pe','ぽ':'po','ば':'ba','び':'byi','ぶ':'bu','べ':'be','ぼ':'bo','っ':'x'};
+
+    document.getElementById("text-input").addEventListener("input", function() {
+        let romaji = "";
+        for (let char of this.value) { romaji += hiraMap[char] || char; }
+        document.getElementById("romaji-output").textContent = romaji;
+        const special = romaji.split("").map(c => charTransformDict[c] || c).join("");
+        document.getElementById("special-output").textContent = special;
+    });
+
+    // --- 初期化 ---
+    setInterval(updateAll, 1000);
+    updateAll();
+    const initS = calculateSilenseTime();
+    document.getElementById('silenseYear').value = initS.year;
+    document.getElementById('silenseMonth').value = initS.month;
+    document.getElementById('silenseDay').value = initS.day;
+</script>
 </body>
 </html>
