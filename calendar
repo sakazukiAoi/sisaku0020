@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シーレンス カレンダー</title>
+    <style>
+        /* ===== 基本レイアウト ===== */
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #222; 
+            color: white; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+        }
+        .left, .right { padding: 20px; }
+        .left { flex: 1; text-align: center; }
+        .right { flex: 1; margin-left: 50px; }
+
+        /* ===== 地球時刻・シーレンス時刻の表示 ===== */
+        h1 { margin-top: 20px; font-size: 1.5em; }
+        #clock { font-size: 2em; margin: 10px 0; color: #fff; }   /* シーレンス時刻（大） */
+        #earthTitle { color: #888; font-size: 0.9em; }             /* 地球時刻（小・グレー） */
+
+        /* ===== カレンダーのテーブルスタイル ===== */
+        table { border-collapse: collapse; margin: auto; }
+        td, th { border: 1px solid white; padding: 8px; text-align: center; }
+        th { background-color: #444; }  /* 曜日ヘッダー行 */
+
+        /* ===== スケジュール一覧（右列） ===== */
+        .schedule { text-align: left; font-size: 0.8em; line-height: 2em; }
+
+        /* 今日の祝日に一致するスケジュール項目をハイライト */
+        .highlight-event {
+            padding: 4px 8px;
+            border: 2px solid white;
+            border-radius: 6px;
+            background-color: #333;
+            font-weight: bold;
+        }
+
+        /* ===== カレンダーのセル色分け ===== */
+        /* 通常日（平日） */
+        .weekday      { background-color: #222; }
+        /* 今日（平日） */
+        .today-weekday { background-color: white; color: black; font-weight: bold; }
+
+        /* 天曜日（10曜カレンダー 7番目）＝青系 */
+        .ten       { background-color: #4686da; }
+        .today-ten { background-color: #bad4fc; color: black; font-weight: bold; }
+
+        /* 海曜日（10曜カレンダー 8番目）＝赤系 */
+        .umi       { background-color: #b15050; }
+        .today-umi { background-color: #fac6c6; color: black; font-weight: bold; }
+
+        /* 祝日 ＝ 緑系 */
+        .holiday       { background-color: #4b9655; }
+        .today-holiday { background-color: #98dda1; color: black; font-weight: bold; }
+
+        /* ===== スマホ対応 ===== */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .left, .right { margin-left: 0; width: 100%; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 左列：時刻表示 ＋ カレンダー本体 -->
+    <div class="left">
+        <!-- 地球時刻（YYYY.MM.DD.HH.MM.SS 形式） -->
+        <div id="earthTitle">0000.00.00.00.00.00</div>
+        <!-- シーレンス時刻（年/月/日 時:分:秒） -->
+        <div id="clock">読み込み中...</div>
+        <!-- JS で動的生成されるカレンダーテーブルの挿入先 -->
+        <div id="calendar"></div>
+    </div>
+
+    <!-- 右列：年間スケジュール一覧 -->
+    <div class="right">
+        <!-- 祝日・行事リスト（カレンダー色分けの判定にも使用） -->
+        <div class="schedule" id="schedule">
+            <div>1月01日　正月</div><div>1月02日　正月</div><div>1月03日　正月</div><div>1月04日　正月</div>
+            <div>1月13日　節分</div><div>2月04日　建国記念日</div><div>2月12日　春分</div><div>2月18日　みどりの日</div>
+            <div>2月30日　母の日</div><div>3月14日　フォスの誕生日</div><div>3月16日　こどもの日</div><div>3月28日　文化の日</div><div>4月12日　夏至</div>
+            <div>4月15日　海の日</div><div>4月20日　父の日</div><div>4月26日　奴隷解放記念日</div><div>5月08日　クレイン・命日</div>
+            <div>5月21日　夏祭り</div><div>6月10日　入学式</div><div>6月12日　収穫祭 七夕 秋分</div><div>6月13日　収穫祭 運動会</div>
+            <div>6月14日　収穫祭 秋祭り</div><div>7月03日　トック</div><div>7月06日　勤労感謝の日</div><div>7月17日　国王誕生記念日</div>
+            <div>8月12日　冬至</div><div>8月24日　テスト</div><div>8月25日　敬老の日</div><div>8月29日　星の日</div><div>8月32日　大晦日</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // =====================================================================
+    // 定数：シーレンス時間と地球時間の基準点
+    // 地球時間 2025-02-13T14:10:21Z がシーレンス時間 2082/06/17 14:18:04 に対応する
+    // =====================================================================
+    const EARTH_TO_SILENSE_RATIO = 24 / 29;  // 地球1秒 = シーレンス (24/29)秒
+    const baseEarthTime = new Date("2025-02-13T14:10:21Z").getTime();  // 基準地球時刻（ミリ秒）
+    const baseSilense = { year: 2082, month: 6, day: 17, hour: 14, minute: 18, second: 4 };
+
+    // =====================================================================
+    // calculateSilenseTime(targetMs)
+    // 引数：対象の地球時刻（ミリ秒）。省略時は現在時刻を使用。
+    // 戻値：シーレンス時刻のオブジェクト { formatted, year, month, day, hour, min, sec }
+    //
+    // 計算手順：
+    //   1. 基準地球時刻からの経過秒数を求める
+    //   2. 比率 (24/29) を掛けてシーレンス経過秒数に変換
+    //   3. 基準シーレンス時刻に加算し、繰り上がり処理
+    //      - 1分 = 60秒、1時間 = 60分、1日 = 24時間
+    //      - 1ヶ月 = 32日、1年 = 8ヶ月（シーレンス暦）
+    // =====================================================================
+    function calculateSilenseTime(targetMs = null) {
+        const now = targetMs || new Date().getTime();
+
+        // 地球経過秒数 → シーレンス経過秒数
+        const elapsedEarthSec = (now - baseEarthTime) / 1000;
+        const elapsedSilenseSec = elapsedEarthSec * EARTH_TO_SILENSE_RATIO;
+
+        // 基準時刻に加算（整数秒のみ使用）
+        let totalSec = baseSilense.second + Math.floor(elapsedSilenseSec);
+        let totalMin = baseSilense.minute + Math.floor(totalSec / 60);
+        let totalHr  = baseSilense.hour   + Math.floor(totalMin / 60);
+        let totalDay = baseSilense.day    + Math.floor(totalHr  / 24);
+
+        // 日 → 月 の繰り上がり（1ヶ月 = 32日）
+        let addedMo = Math.floor((totalDay - 1) / 32);
+        let curDay  = ((totalDay - 1) % 32) + 1;
+
+        // 月 → 年 の繰り上がり（1年 = 8ヶ月）
+        let totalMo = baseSilense.month + addedMo;
+        let curYear = baseSilense.year + Math.floor((totalMo - 1) / 8);
+        let curMo   = ((totalMo - 1) % 8) + 1;
+
+        const pad = (n) => n.toString().padStart(2, "0");
+        return {
+            formatted: `${curYear}/${pad(curMo)}/${pad(curDay)} ${pad(totalHr % 24)}:${pad(totalMin % 60)}:${pad(totalSec % 60)}`,
+            year: curYear, month: curMo, day: curDay,
+            hour: totalHr % 24, min: totalMin % 60, sec: totalSec % 60
+        };
+    }
+
+    // =====================================================================
+    // updateAll()
+    // 毎秒 setInterval から呼ばれるメイン更新処理
+    // ・地球時刻・シーレンス時刻の表示更新
+    // ・カレンダーとスケジュールハイライトの再描画
+    // =====================================================================
+    function updateAll() {
+        const now = new Date();
+        const silense = calculateSilenseTime();
+
+        const pad = (n) => n.toString().padStart(2, "0");
+
+        // 地球時刻を YYYY.MM.DD.HH.MM.SS 形式で表示
+        const eStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}.${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}`;
+        document.getElementById("earthTitle").textContent = eStr;
+
+        // シーレンス時刻を表示
+        document.getElementById("clock").textContent = silense.formatted;
+
+        // カレンダーと今日のイベントハイライトを更新
+        updateCalendar(silense.year, silense.month, silense.day);
+        highlightSchedule(silense.month, silense.day);
+    }
+
+    // =====================================================================
+    // updateCalendar(year, month, today)
+    // 指定されたシーレンス年月のカレンダーテーブルを動的生成する
+    //
+    // シーレンス暦の構造：
+    //   ・1ヶ月 = 32日
+    //   ・1週間 = 8日（水・金・地・火・木・土・天・海）
+    //   ・月の1日は必ず水曜日始まり（曜日 = (日付-1) % 8）
+    //
+    // セルの色分け優先順位：
+    //   今日の祝日 > 今日の天/海曜 > 今日の平日 > 祝日 > 天曜 > 海曜 > 平日
+    // =====================================================================
+    function updateCalendar(year, month, today) {
+        // シーレンス暦の曜日名（8曜制）
+        const weekNames = ["水", "金", "地", "火", "木", "土", "天", "海"];
+
+        // スケジュール一覧から祝日を「月-日」形式の辞書に変換
+        // 例: "3月16日" → { "3-16": true }
+        const holidays = {};
+        document.querySelectorAll("#schedule div").forEach(div => {
+            const m = div.textContent.match(/(\d+)月(\d+)日/);
+            if (m) holidays[`${parseInt(m[1])}-${parseInt(m[2])}`] = true;
+        });
+
+        // テーブルヘッダー（曜日行）の生成
+        let html = `<h2>${year}年 ${month}月</h2><table><tr>`;
+        weekNames.forEach(w => html += `<th>${w}</th>`);
+        html += `</tr><tr>`;
+
+        // 1日〜32日のセルを生成
+        for (let day = 1; day <= 32; day++) {
+            const wIdx = (day - 1) % 8;  // 曜日インデックス（0=水, 6=天, 7=海）
+            const isHoliday = holidays[`${month}-${day}`];
+
+            // CSSクラスの決定（今日かどうかで today- プレフィックスが付く）
+            let cls = "weekday";
+            if (weekNames[wIdx] === "天") cls = "ten";
+            if (weekNames[wIdx] === "海") cls = "umi";
+            if (isHoliday) cls = "holiday";
+            if (day === today) {
+                if (isHoliday)                    cls = "today-holiday";
+                else if (weekNames[wIdx] === "天") cls = "today-ten";
+                else if (weekNames[wIdx] === "海") cls = "today-umi";
+                else                               cls = "today-weekday";
+            }
+
+            html += `<td class="${cls}">${day}</td>`;
+
+            // 8列ごとに改行（最終日の後は不要）
+            if (day % 8 === 0 && day < 32) html += `</tr><tr>`;
+        }
+
+        document.getElementById("calendar").innerHTML = html + "</tr></table>";
+    }
+
+    // =====================================================================
+    // highlightSchedule(month, day)
+    // 今日の月・日と一致するスケジュール項目を highlight-event クラスで強調表示する
+    // 例: month=3, day=16 → "3月16日" で始まる項目をハイライト
+    // =====================================================================
+    function highlightSchedule(month, day) {
+        document.querySelectorAll("#schedule div").forEach(div => {
+            // "3月16日" のように2桁ゼロ埋めで比較
+            const matches = div.textContent.startsWith(`${month}月${String(day).padStart(2, "0")}日`);
+            div.classList.toggle("highlight-event", matches);
+        });
+    }
+
+    // =====================================================================
+    // 初期化
+    // 1秒ごとに updateAll() を呼び出してリアルタイム更新
+    // =====================================================================
+    setInterval(updateAll, 1000);
+    updateAll();  // 初回即時実行（setInterval の最初の1秒待ちを回避）
+</script>
+</body>
+</html>
