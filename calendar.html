@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シーレンス カレンダー</title>
+    <title>特別な日</title>
     <style>
         /* ===== 基本レイアウト ===== */
         body { 
@@ -78,7 +78,7 @@
     <!-- 左列：時刻表示 ＋ カレンダー本体 -->
     <div class="left">
         <!-- 地球時刻（YYYY.MM.DD.HH.MM.SS 形式） -->
-        <div id="earthTitle">0000.00.00.00.00.00</div>
+        <div id="earth">0000.00.00.00.00.00</div>
         <!-- シーレンス時刻（年/月/日 時:分:秒） -->
         <div id="clock">読み込み中...</div>
         <!-- JS で動的生成されるカレンダーテーブルの挿入先 -->
@@ -165,7 +165,7 @@
 
         // 地球時刻を YYYY.MM.DD.HH.MM.SS 形式で表示
         const eStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}.${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}`;
-        document.getElementById("earthTitle").textContent = eStr;
+        document.getElementById("earth").textContent = eStr;
 
         // シーレンス時刻を表示
         document.getElementById("clock").textContent = silense.formatted;
